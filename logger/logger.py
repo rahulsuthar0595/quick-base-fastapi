@@ -2,7 +2,7 @@ import logging.config
 
 LOGGING = {
     "version": 1,
-    "disabled_existing_loggers": True,
+    "disable_existing_loggers": False,
     "formatters": {
         "key_value": {
             "format": "[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s"
@@ -16,7 +16,7 @@ LOGGING = {
         }
     },
     "loggers": {
-        "app": {
+        "": {
             "handlers": ["console"],
             "level": "DEBUG",
             "propagate": False
@@ -25,4 +25,4 @@ LOGGING = {
 }
 
 logging.config.dictConfig(LOGGING)
-logger = logging.getLogger("app")
+logger = logging.getLogger(__name__)

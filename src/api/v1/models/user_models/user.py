@@ -14,5 +14,7 @@ class User(Base, TimeStampModelMixin):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True, unique=True)
+    full_name = Column(String(255))
     email = Column(String(255), index=True, unique=True)
+    password = Column(String)
     is_active = Column(Boolean, default=False)
