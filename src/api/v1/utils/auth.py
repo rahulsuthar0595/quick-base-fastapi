@@ -1,21 +1,16 @@
-from datetime import datetime, timedelta, timezone
+import uuid
+from datetime import datetime, timedelta
 
 import jwt
-from fastapi import HTTPException, status
-from fastapi.params import Depends
-from jwt import InvalidTokenError
+from itsdangerous import URLSafeTimedSerializer
 from passlib.context import CryptContext
-from pydantic import ValidationError
-from sqlalchemy.orm import Session
 
 from config.config import settings
-from database.db_connection import get_db
-from src.api.v1.models.user_models.user import User
-from src.api.v1.schemas.user import UserCreate
-from src.api.v1.utils.jwt_bearer import JWTBearer
+from logger.logger import logger
 
 pwd_context = CryptContext(schemes=["bcrypt"])
-jwt_bearer = JWTBearer()
+
+url_safe_timed_serializer = URLSafeTimedSerializer(secret_key=settings.SECRET_KEY)
 
 
 def get_hashed_password(password: str) -> str:
@@ -26,56 +21,43 @@ def verify_password(plain_password: str, hashed_password: str):
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def create_access_token(email: str):
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_LIMIT)
-    to_encode = {"sub": email, "exp": datetime.now(timezone.utc) + access_token_expires}
+def create_access_token(email: str, expiry: timedelta = None, refresh: bool = False):
+    to_encode = {
+        "email": email,
+        "exp": datetime.now()
+        + (
+            expiry
+            if expiry is not None
+            else timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_LIMIT)
+        ),
+        "jti": str(uuid.uuid4()),
+        "refresh": refresh,
+    }
     encoded_jwt = jwt.encode(
         to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
     )
     return encoded_jwt
 
 
-def create_user(db: Session, user_data: UserCreate) -> User:
-    user = User(
-        full_name=user_data.full_name,
-        email=user_data.email,
-        password=get_hashed_password(user_data.password),
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-def get_current_active_user(
-    token: str = Depends(jwt_bearer), db: Session = Depends(get_db)
-):
-    credentials_exception = HTTPException(
-        detail="Invalid Credentials.",
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+def decode_token(token: str):
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        return jwt.decode(
+            jwt=token, key=settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        email = payload.get("sub")
-        expiration = datetime.fromtimestamp(payload.get("exp"))
-        if not email:
-            raise credentials_exception
+    except jwt.PyJWTError as e:
+        logger.error(f"Exception while decode token for '{token}': {str(e)}")
+        return None
 
-        if expiration <= datetime.now():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Token expired."
-            )
-    except (InvalidTokenError, ValidationError):
-        raise credentials_exception
 
-    user = (
-        db.query(User)
-        .filter(User.email.ilike(f"%{email}%"), User.is_active == True)
-        .first()
-    )
-    if not user:
-        raise credentials_exception
-    return user
+def create_url_safe_token(data: dict):
+    return url_safe_timed_serializer.dumps(data)
+
+
+def decode_url_safe_token(token: str):
+    try:
+        return url_safe_timed_serializer.loads(token)
+    except Exception as e:
+        logger.exception(
+            f"Exception while decode url safe token for '{token}': {str(e)}"
+        )
+        return None
