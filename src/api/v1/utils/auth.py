@@ -55,7 +55,7 @@ def create_url_safe_token(data: dict):
 
 def decode_url_safe_token(token: str):
     try:
-        return url_safe_timed_serializer.loads(token)
+        return url_safe_timed_serializer.loads(token, max_age=3600)
     except Exception as e:
         logger.exception(
             f"Exception while decode url safe token for '{token}': {str(e)}"
