@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket.io Chat in FastAPI</title>
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+</head>
+<body>
+    Hey Lets chat in socket io with support of FastAPI.
+
+    <input type="text" id="messageInput" placeholder="Type here.......">
+    <button id="sendButton">Send</button>
+    <h1>Reply From Server</h1>
+    <div id="messages" style="border: 1px solid black;"></div>
+    <script src="{{ url_for('static', path='js/socket_io.js') }}"></script>
+</body>
+</html>
