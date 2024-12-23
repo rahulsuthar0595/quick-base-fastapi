@@ -5,6 +5,14 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
 
 
+class KeyCloakUserSignUp(BaseModel):
+    first_name: str
+    last_name: str
+    email: EmailStr
+    password: str
+    phone_number: int
+
+
 class UserBase(BaseModel):
     email: EmailStr
     password: str
