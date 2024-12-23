@@ -32,15 +32,18 @@ async def user_registration(
         raise HTTPException(
             detail=USER_EMAIL_ALREADY_EXISTS, status_code=status.HTTP_400_BAD_REQUEST
         )
-
-    user = UserService().create_user(user_data, db)
-    token = create_url_safe_token({"email": user.email})
-    verify_email_link = f"{settings.BACKEND_DOMAIN}/api/v1/auth/verify-email/{token}"
-    send_account_activation_mail(
-        background_tasks,
-        email=user.email,
-        data={"verify_email_link": verify_email_link, "email": user.email},
-    )
+    try:
+        user = UserService().create_user(user_data, db)
+        token = create_url_safe_token({"email": user.email})
+        verify_email_link = f"{settings.BACKEND_DOMAIN}/api/v1/auth/verify-email/{token}"
+        send_account_activation_mail(
+            background_tasks,
+            email=user.email,
+            data={"verify_email_link": verify_email_link, "email": user.email},
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
     return user
 
 

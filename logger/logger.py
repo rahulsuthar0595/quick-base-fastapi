@@ -18,7 +18,7 @@ LOGGING = {
     "loggers": {
         "": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": False
         }
     }

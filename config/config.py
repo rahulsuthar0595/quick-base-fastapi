@@ -28,6 +28,12 @@ class ConfigSetting(BaseSettings):
     MAIL_FROM_NAME: str
     BACKEND_DOMAIN: str
 
+    ELASTIC_SEARCH_HOST: str
+
+    MONGO_DB_HOST: str
+    MONGO_DB_PORT: int
+    MONGO_DB_NAME: str
+
 
 @lru_cache
 def get_settings():
