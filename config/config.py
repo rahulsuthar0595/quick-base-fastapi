@@ -28,6 +28,12 @@ class ConfigSetting(BaseSettings):
     MAIL_FROM_NAME: str
     BACKEND_DOMAIN: str
 
+    KEYCLOAK_SERVER_URL: str
+    KEYCLOAK_REALM_NAME: str
+    KEYCLOAK_CLIENT_ID: str
+    KEYCLOAK_CLIENT_SECRET: str
+    KEYCLOAK_REDIRECT_URI: str
+
 
 @lru_cache
 def get_settings():
